@@ -1,0 +1,209 @@
+body {
+  background: #f0f9fc;
+  font-size: 15px;
+  padding: 70px 20px 20px;
+}
+
+.navbar-fixed-top {
+  position: absolute;
+}
+
+.navbar-brand > img {
+  margin: -18px 5px -15px 0px;
+}
+
+.nav a {
+  font-size: 14px;
+}
+
+.nav a i {
+  margin-right: 7px;
+}
+
+a, .btn {
+  transition: background-color 0.2s, color 0.2s;
+  -moz-transition: background-color 0.2s, color 0.2s;
+  -webkit-transition: background-color 0.2s, color 0.2s;
+}
+
+body > .header {
+  padding-bottom: 18px;
+  text-align: center;
+}
+
+body > .content {
+  background: #fff;
+  border-radius: 15px;
+  margin: 0px auto;
+  padding: 20px;
+  text-align: center;
+  width: 90%;
+}
+
+body > .content > h1 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0px;
+  margin-bottom: 18px;
+  padding: 0px;
+  text-align: left;
+}
+
+body > .content > h1 > small {
+  font-size: 24px;
+  font-weight: 300;
+}
+
+body > .content h3 {
+  font-size: 20px;
+  font-weight: 300;
+  margin: 0px;
+  margin-bottom: 15px;
+  padding: 0px;
+  text-align: left;
+}
+
+body > .content a.anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+body > .content a.anchor:hover {
+  color: inherit;
+}
+
+body > .content > hr {
+  border-color: #f0f9fc;
+  margin: 20px -20px;
+}
+
+p.shortlink {
+  margin: -4px 0px 0px;
+}
+
+p.shortlink > a {
+  font-weight: 300;
+}
+.table > thead > tr > th {
+  text-align:center;
+}
+
+.table > thead > tr > td {
+  text-align:center;
+}
+
+.table > tbody > tr > th {
+  border: none;
+  font-weight: 300;
+  text-align:center;
+}
+
+.table > tbody > tr > td {
+  border-color: #f6f6f6;
+  font-weight: 400;
+  text-align:center;
+}
+
+.footer {
+  font-weight: 300;
+  margin: -5px 0px;
+}
+
+.footer > a {
+  display: inline-block;
+  margin: 0px 15px;
+}
+
+.footer > a > i {
+  margin-right: 9px;
+}
+
+.information {
+  text-align: left;
+}
+
+.information > div {
+  font-size: 15px;
+  font-weight: 400;
+  margin-bottom: 5px;
+}
+
+.information > div > small {
+  color: #999;
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 300;
+  margin-right: 8px;
+  text-align: right;
+  width: 250px;
+}
+
+.information-inline {
+  margin-bottom: -20px;
+  text-align: justify;
+  -ms-text-justify: distribute-all-lines;
+  text-justify: distribute-all-lines;
+}
+
+.information-inline::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+}
+
+.information-inline > div {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 500;
+  margin-right: 20px;
+}
+
+.information-inline > div > small {
+  color: #999;
+  font-size: 15px;
+  font-weight: 300;
+  margin-right: 5px;
+}
+
+.search > p {
+  color: #999;
+  font-weight: 300;
+}
+
+.search .input-group {
+  margin: 0px auto;
+  min-width: 600px;
+  max-width: 100%;
+  width: 60%;
+}
+
+.pagination {
+  margin-bottom: 0px;
+}
+
+.sorry {
+  font-weight: 300;
+}
+
+@media (min-width: 768px) {
+  .dl-horizontal dt {
+    font-weight: 500;
+    width: 200px;
+  }
+
+  .dl-horizontal dd {
+    margin-left: 210px;
+    font-weight: 300;
+    text-align: left;
+  }
+}
+
+.alert {
+  font-size: 14px;
+  font-weight: 300;
+  padding: 8px;
+}
+
+.alert .alert-link {
+  font-weight: 500;
+}
