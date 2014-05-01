@@ -124,13 +124,13 @@ DEFAULT_TEMPLATE = """
         </div>
     </nav>
     <div class="header">
-		<center>
-	        <div>
-		<iframe scrolling="no" frameborder="0" src="//adbit.co/adspace.php?a=555DN158LEJL5" style="overflow:hidden;width:728px;height:90px;"></iframe>
-	        </div>
-	        <div>
-		<a href="//adbit.co/?a=Advertise&b=View_Bid&c=555DN158LEJL5" target="_blank">&#8657; Your Ad Here &#8657;</a>
-	        </div>
+        <center>
+            <div>
+        <iframe scrolling="no" frameborder="0" src="//adbit.co/adspace.php?a=555DN158LEJL5" style="overflow:hidden;width:728px;height:90px;"></iframe>
+            </div>
+            <div>
+        <a href="//adbit.co/?a=Advertise&b=View_Bid&c=555DN158LEJL5" target="_blank">&#8657; Your Ad Here &#8657;</a>
+            </div>
 </center>
     </div>
     <div class="content">
@@ -369,10 +369,10 @@ class Abe:
                 # cron job.
                 abe.store.catch_up()
 
-			tvars = abe.template_vars.copy()
+            tvars = abe.template_vars.copy()
             tvars['dotdot'] = page['dotdot']
             page['template_vars'] = tvars
-			
+            
             handler(page)
         except PageNotFound:
             status = '404 Not Found'
@@ -416,7 +416,7 @@ class Abe:
         page['h1'] = ' '
         body = page['body']
         body += [
-		    abe.search_form(page),
+            abe.search_form(page),
             '</p>'
             '<div class="alert alert-info">'
             '<a class="twitter-timeline" href="https://twitter.com/CryptExplorer" width="520" height="200" data-chrome="nofooter" data-tweet-limit="1" data-widget-id="446290874419277824">Tweets by @CryptExplorer</a>'
@@ -426,7 +426,7 @@ class Abe:
             '<table class="table table-hover table-striped table-responsive table-condensed sortable">\n',
             '<thead>\n'
             '<tr><th data-defaultsort="asc">Currency</th><th>Ticker</th><th>Block</th><th>Last Block Time (GMT)</th>',
-            '<th>Coins Created</th>',
+            '<th>Coins Created</th><th>Difficulty</th>',
             '</tr>\n'
             '</thead>\n'
             '<tbody>\n']
@@ -436,13 +436,14 @@ class Abe:
             SELECT c.chain_name, b.block_height, b.block_nTime, b.block_hash,
                    b.block_total_seconds, b.block_total_satoshis,
                    b.block_satoshi_seconds,
-                   b.block_total_ss
+                   b.block_total_ss, b.block_nBits
               FROM chain c
               JOIN block b ON (c.chain_last_block_id = b.block_id)
              ORDER BY c.chain_name
         """)
         for row in rows:
             name = row[0]
+            hamdi = row[8]
             chain = abe.store.get_chain_by_name(name)
             if chain is None:
                 abe.log.warning("Store does not know chain: %s", name)
@@ -486,11 +487,12 @@ class Abe:
                                 100.0 - (100.0 * (ss + more) / denominator))
 
                     body += [
-                        '<td>', format_satoshis(satoshis, chain), '</td>',]
+                        '<td>', format_satoshis(satoshis, chain), '</td>',
+                        '<td>', util.calculate_difficulty(int(hamdi)), '</td>',]
 
             body += ['</tr>\n']
         body += ['</tbody>\n'
-		         '</table>\n']
+                 '</table>\n']
         if len(rows) == 0:
             body += ['<p>No block data found.</p>\n']
 
@@ -611,7 +613,7 @@ class Abe:
 
         extra = False
         #extra = True
-        body += ['<h2>', chain['name'] ,'</h2><p>',
+        body += ['<h2>', chain.name ,'</h2><p>',
                  '<a href="http://freebitco.in/?r=384697" target="_blank"><img src="http://static1.freebitco.in/banners/468x60-1.png"></a>'
                  '', nav, '\n<hr>\n',
                  '<table class="table table-condensed table-hover table-responsive">\n'
@@ -674,10 +676,19 @@ class Abe:
         except DataStore.MalformedHash:
             body += ['<p class="error">Not in correct format.</p>']
             return
-
+        
+        is_stake_chain = chain is not None and chain.has_feature('nvc_proof_of_stake')
+        is_proof_of_stake = is_stake_chain and \
+            len(tx_ids) > 1 and coinbase_tx['total_out'] == 0
+        
         if b is None:
             body += ['<hr>\n<p class="sorry">Block not found.</p>']
             return
+
+        if is_proof_of_stake:
+            posgen = posgen = -txs[tx_ids[1]]['fees']
+            txs[tx_ids[1]]['fees'] = 0
+            block_fees += posgen
 
         in_longest = False
         for cc in b['chain_candidates']:
@@ -687,7 +698,7 @@ class Abe:
                 in_longest = cc['in_longest']
 
         if in_longest:
-            page['title'] = [escape(chain.name), ' ', b['height'] ' - CryptExplorer']
+            page['title'] = [escape(chain.name), ' ', b['height'], ' - CryptExplorer']
             page['h1'] = ['<small>Block</small> <a href="', page['dotdot'], 'chain/',
                           escape(chain.name), '?hi=', b['height'], '">',
                           escape(chain.name), '</a> ', b['height']]
@@ -695,19 +706,16 @@ class Abe:
             page['title'] = ['Block ', b['hash'][:4], '...', b['hash'][-10:], ' - CryptExplorer']
 
         body += abe.short_link(page, 'b/' + block_shortlink(b['hash']))
-		
-		body += ['<hr class="clear">\n<div class="information">\n<div><small>Hash</small>', b['hash'], '</div>']
-
-        is_stake_chain = chain.has_feature('nvc_proof_of_stake')
-        is_stake_block = is_stake_chain and b['is_proof_of_stake']
+        
+        body += ['<hr class="clear">\n<div class="information">']
 
         body += ['<p>']
         if is_stake_chain:
             body += [
-                'Proof of Stake' if is_stake_block else 'Proof of Work',
+                'Proof of Stake' if is_proof_of_stake else 'Proof of Work',
                 ': ',
                 format_satoshis(b['generated'], chain), ' coins generated<br />\n']
-        body += ['Hash: ', b['hash'], '<br />\n']
+        body += ['<div><small>Hash</small>', b['hash'], '</div>']
 
         if b['hashPrev'] is not None:
             body += ['<div><small>Previous Block</small><a href="', dotdotblock,
@@ -715,10 +723,10 @@ class Abe:
         if b['next_block_hashes']:
             body += ['<div><small>Next Block</small>']
         for hash in b['next_block_hashes']:
-			body += ['<a href="', dotdotblock, hash, '">', hash, '</a></div>\n']
+            body += ['<a href="', dotdotblock, hash, '">', hash, '</a></div>\n']
 
         body += [
-			['<div><small>Height</small>', b['height'], '</div>\n']
+            ['<div><small>Height</small>', b['height'], '</div>\n']
             if b['height'] is not None else '',
 
             '<div><small>Version</small>', b['version'], '</div>\n',
@@ -734,7 +742,7 @@ class Abe:
             '<div><small>Nonce</small>', b['nNonce'], '</div>\n',
             '<div><small>Transactions</small>', len(b['transactions']), '</div>\n',
             '<div><small>Value out</small>', format_satoshis(b['value_out'], chain), '</div>\n',
-			'<div><small>Transaction Fees</small>', format_satoshis(b['fees'], chain), '</div>\n',
+            '<div><small>Transaction Fees</small>', format_satoshis(b['fees'], chain), '</div>\n',
 
             ['<div><small>Average Coin Age</small>%6g' % (b['satoshi_seconds'] / 86400.0 / b['chain_satoshis'],),
              ' days</div>\n']
@@ -772,7 +780,7 @@ class Abe:
 
             if tx is b['transactions'][0]:
                 body += [
-                    'POS ' if is_stake_block else '',
+                    'POS ' if is_proof_of_stake else '',
                     'Generation: ', format_satoshis(b['generated'], chain), ' + ',
                     format_satoshis(b['fees'], chain), ' total fees']
             else:
@@ -782,7 +790,7 @@ class Abe:
 
             body += ['</td><td>']
             for txout in tx['out']:
-                if is_stake_block:
+                if is_proof_of_stake:
                     if tx is b['transactions'][0]:
                         assert txout['value'] == 0
                         assert len(tx['out']) == 1
@@ -940,7 +948,7 @@ class Abe:
 
         body = page['body']
         page['title'] = 'Address ' + escape(address) + ' - CryptExplorer'
-
+        page['h1'] = '<small>Address</small> ' + escape(address)
         try:
             history = abe.store.export_address_history(
                 address, chain=page['chain'], max_rows=abe.address_history_rows_max)
@@ -949,8 +957,7 @@ class Abe:
             return
 
         if history is None:
-            body += ["<p>I'm sorry, this address has too many records"
-                     " to display.</p>"]
+            body += ['<hr>\n<p class="sorry">This address has too many records to display.</p>']
             return
 
         binaddr  = history['binaddr']
@@ -963,7 +970,7 @@ class Abe:
         counts   = history['counts']
 
         if (not chains):
-            body += ['<p>Address not seen on the network.</p>']
+            body += ['<hr>\n<p class="sorry">Address not seen on the network.</p>']
             return
 
         def format_amounts(amounts, link):
@@ -996,7 +1003,7 @@ class Abe:
             link = address[0 : abe.shortlink_type]
         body += abe.short_link(page, 'a/' + link)
 
-        body += ['<hr class="clear">\n<div class="information">\n<div><small>Balance</small>'] + format_amounts(balance, True)
+        body += ['<hr class="clear">\n<div class="information">\n<div><small>Balance</small>'] + format_amounts(balance, True) + ['</div>\n']
 
         if 'subbinaddr' in history:
             chain = page['chain']
@@ -1016,8 +1023,7 @@ class Abe:
         for chain in chains:
             balance[chain.id] = 0  # Reset for history traversal.
 
-        body += ['<br />\n',
-                 '<div><small>Transactions in</small>', counts[0], '</div>\n',
+        body += ['<div><small>Transactions in</small>', counts[0], '</div>\n',
                  '<div><small>Received</small>', format_amounts(received, False), '</div>\n',
                  '<div><small>Transactions out</small>', counts[1], '</div>\n',
                  '<div><small>Sent</small>', format_amounts(sent, False), '</div>\n']
@@ -1273,7 +1279,7 @@ class Abe:
             if cmd is not None:
                 raise PageNotFound()  # XXX want to support /a/...
 
-			page['title'] = [escape(chain.name), ' - Block ', height, ' - CryptExplorer']
+            page['title'] = [escape(chain.name), ' - Block ', height, ' - CryptExplorer']
             page['h1'] = ['<small>Block</small> ', height]
             abe._show_block(page, page['dotdot'] + 'block/', chain, block_number=height)
             return
@@ -1447,7 +1453,7 @@ class Abe:
             cmd = name[2:]
             page['body'] += ['<dt><a href="q/', cmd, '">', cmd, '</a></dt>']
             val = getattr(abe, name)
-			page['body'] += ['<dd>\n']
+            page['body'] += ['<dd>\n']
             if val.__doc__ is not None:
                 page['body'] += [' - ', escape(val.__doc__)]
             page['body'] += ['</dd>\n']
@@ -2172,3 +2178,4 @@ See abe.conf for commented examples.""")
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
+

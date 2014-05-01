@@ -30,9 +30,10 @@ def create(policy, **kwargs):
     if policy == "Hirocoin":        return Hirocoin(**kwargs)
     if policy == "X11":             return X11Chain(**kwargs)
     if policy == "Bitleu":          return Bitleu(**kwargs)
-	if policy == "X13":             return X13Chain(**kwargs)
-	if policy == "Maru"             return Maru(**kwargs)
-	if policy == "Badgercoin"       return Badgercoin(**kwargs)
+    if policy == "X13":             return X13Chain(**kwargs)
+    if policy == "Maru":            return Maru(**kwargs)
+    if policy == "Badgercoin":      return Badgercoin(**kwargs)
+    if policy == "Quark":           return Quark(**kwargs)
     return Sha256NmcAuxPowChain(**kwargs)
 
 
@@ -346,6 +347,11 @@ class BadgerChain(X11Chain, PpcPosChain):
     def has_feature(chain, feature):
         return feature == 'nvc_proof_of_stake'
 
+class QuarkChain(Chain):
+    def block_header_hash(chain, header):
+        import quark_hash
+        return quark_hash.getPoWHash(header)
+
 class NovaCoin(NvcChain):
     def __init__(chain, **kwargs):
         chain.name = 'NovaCoin'
@@ -428,3 +434,12 @@ class Badgercoin(BadgerChain):
     datadir_conf_file_name = 'Badgercoin.conf'
     datadir_rpcport = 23389
     datadir_p2pport = 23489
+
+class Quark(QuarkChain):
+    def __init__(chain, **kwargs):
+        chain.name = 'Quarkcoin'
+        chain.code3 = 'QRK'
+        chain.address_version = '\x58'
+        chain.script_addr_vers = '\x09'
+        chain.magic = '\xfe\xa5\x03\xdd'
+        Chain.__init__(chain, **kwargs)
